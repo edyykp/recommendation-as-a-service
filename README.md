@@ -30,11 +30,14 @@ The CSV file (`IMBD.csv`) should be located at `dist/IMBD.csv` and contain movie
 
 ## Usage
 
-1. Place your `IMBD.csv` file in the `dist` directory.
-2. Set your Recombee private token in the configuration.
+1. Set your Recombee private token in the configuration.
+2. Run this to compile TypeScript into JavaScript in the dist folder
+   ```sh
+   npx tsc
+   ```
 3. Start the server:
    ```sh
-   npm start
+   node dist/server.js
    ```
    On startup, the catalog will be reset and movies from the CSV will be uploaded.
 
