@@ -4,6 +4,7 @@ This project integrates Recombee’s recommendation API with a Node.js server. I
 
 ## Features
 
+- **Upload item properties:** Uploads all item properties programmatically.
 - **Catalog Reset:** Deletes all items from the Recombee catalog before each upload.
 - **Bulk Movie Upload:** Reads movie data from a CSV file and uploads each movie as an item to Recombee.
 - **Express Server:** Provides a basic Express setup with error handling.
@@ -21,13 +22,6 @@ The CSV file (`IMBD.csv`) should be located at `dist/IMBD.csv` and contain movie
 | duration    | Duration in minutes                                                   |
 | stars       | Comma-separated list of starring actors (e.g., "Tom Hanks, Meg Ryan") |
 | genre       | Comma-separated list of genres (e.g., "Drama, Romance")               |
-
-**Example CSV row:**
-
-```
-title,description,rating,votes,duration,stars,genre
-"Forrest Gump","The story of Forrest Gump...",8.8,1800000,142,"Tom Hanks, Robin Wright","Drama, Romance"
-```
 
 **Note:**
 

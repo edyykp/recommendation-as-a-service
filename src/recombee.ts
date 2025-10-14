@@ -27,6 +27,25 @@ export const resetCatalog = async (recombeeClient: ApiClient) => {
   }
 };
 
+export const addItemProperties = async (recombeeClient: ApiClient) => {
+  try {
+    const properties = [
+      new requests.AddItemProperty("title", "string"),
+      new requests.AddItemProperty("description", "string"),
+      new requests.AddItemProperty("rating", "double"),
+      new requests.AddItemProperty("votes", "int"),
+      new requests.AddItemProperty("duration", "int"),
+      new requests.AddItemProperty("stars", "set"),
+      new requests.AddItemProperty("genre", "set"),
+    ];
+
+    await recombeeClient.send(new requests.Batch(properties));
+    console.log("Item properties added successfully.");
+  } catch (err) {
+    console.error("Error setting item properties:", err);
+  }
+};
+
 export const uploadMovies = async (recombeeClient: ApiClient) => {
   const parser = fs
     .createReadStream("/Users/edstoica/lab-sr/src/IMBD.csv")
@@ -42,7 +61,7 @@ export const uploadMovies = async (recombeeClient: ApiClient) => {
           title: record.title,
           description: record.description,
           rating: Number(record.rating),
-          votes: Number(record.votes),
+          votes: Number(record.votes.replace(",", "").trim()),
           duration: Number(record.duration),
           stars: record.stars
             .split(", ")
