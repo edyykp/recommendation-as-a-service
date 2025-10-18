@@ -1,7 +1,7 @@
-import { randomUUID } from "crypto";
 import { parse } from "csv-parse";
 import { requests, type ApiClient } from "recombee-api-client";
 import fs from "fs";
+import stripBomStream from "strip-bom-stream";
 
 export const resetCatalog = async (recombeeClient: ApiClient) => {
   try {
@@ -21,9 +21,36 @@ export const resetCatalog = async (recombeeClient: ApiClient) => {
     }
 
     await recombeeClient.send(new requests.Batch(deletedMovies));
-    console.log("🎉 Catalog reset complete.");
+
+    const usersResponse = await recombeeClient.send(new requests.ListUsers({}));
+    const deletedUsers = usersResponse.map(
+      (user) => new requests.DeleteUser(user.userId)
+    );
+
+    if (deletedUsers.length) {
+      await recombeeClient.send(new requests.Batch(deletedUsers));
+      console.log(`Deleted ${deletedUsers.length} users.`);
+    } else {
+      console.log("No users found — user catalog already empty.");
+    }
+    console.log("Catalog reset complete.");
   } catch (err) {
     console.warn("Error resetting catalog:", err);
+  }
+};
+
+export const addUserProperties = async (recombeeClient: ApiClient) => {
+  try {
+    const properties = [
+      new requests.AddUserProperty("sales_person", "string"),
+      new requests.AddUserProperty("team", "string"),
+      new requests.AddUserProperty("location", "string"),
+    ];
+
+    await recombeeClient.send(new requests.Batch(properties));
+    console.log("User properties added successfully.");
+  } catch (err) {
+    console.error("Error setting user properties:", err);
   }
 };
 
@@ -51,9 +78,11 @@ export const uploadMovies = async (recombeeClient: ApiClient) => {
     .createReadStream("/Users/edstoica/lab-sr/src/IMBD.csv")
     .pipe(parse({ columns: true, skip_empty_lines: true }));
 
-  const movies = new Array();
+  const movies = [];
+  let index = 1;
+
   for await (const record of parser) {
-    const movieId = randomUUID();
+    const movieId = `movie_${index++}`;
     movies.push(
       new requests.SetItemValues(
         movieId,
@@ -78,8 +107,39 @@ export const uploadMovies = async (recombeeClient: ApiClient) => {
 
   try {
     await recombeeClient.send(new requests.Batch(movies));
-    console.log("🎉 Movies upload complete.");
+    console.log("Movies upload complete.");
   } catch (err) {
     console.warn(`Error uploading movies`, err);
+  }
+};
+
+export const uploadUsers = async (recombeeClient: ApiClient) => {
+  const parser = fs
+    .createReadStream("/Users/edstoica/lab-sr/src/people.csv")
+    .pipe(stripBomStream())
+    .pipe(parse({ columns: true, skip_empty_lines: true }));
+
+  const users = [];
+  for await (const record of parser) {
+    users.push(
+      new requests.SetUserValues(
+        record.sp_id,
+        {
+          sales_person: record.sales_person,
+          team: record.team,
+          location: record.location,
+        },
+        {
+          cascadeCreate: true,
+        }
+      )
+    );
+  }
+
+  try {
+    await recombeeClient.send(new requests.Batch(users));
+    console.log(`Users upload complete (${users.length} users).`);
+  } catch (err) {
+    console.warn(`Error uploading users`, err);
   }
 };
